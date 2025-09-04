@@ -500,6 +500,44 @@ function validateSpec(rawSpec) {
     return spec;
 }
 
+/**
+ * Check if all required car parameters are present
+ */
+function hasAllRequiredParams(spec) {
+    const requiredParams = [
+        'fuelType', 'design', 'kerbWeight', 'engine', 'power', 'torque',
+        'transmissionType', 'gears', 'bodyType', 'mileage', 'range', 'batteryCapacity'
+    ];
+    // Accepts 'engine' as either displacement or engine
+    return requiredParams.every(param => {
+        if (param === 'engine') {
+            return spec.displacement !== undefined && spec.displacement !== null;
+        }
+        return spec[param] !== undefined && spec[param] !== null && spec[param] !== '';
+    });
+}
+
+/**
+ * Enhanced efficiency score calculation with param validation
+ */
+function getCarEfficiencyScoreOrError(spec) {
+    if (!hasAllRequiredParams(spec)) {
+        return {
+            error: 'Not enough specification/params for car',
+            score: null
+        };
+    }
+    // Electric vehicles get a bonus
+    let score = calculateEfficiencyScore(spec);
+    if (spec.fuelType === 'electric') {
+        score = Math.min(1.0, score + 0.15); // 15% bonus for EVs
+    }
+    return {
+        error: null,
+        score: score
+    };
+}
+
 // Export scoring functions
 window.CarEfficiencyScoring = {
     calculateCompositeScore,
@@ -512,6 +550,8 @@ window.CarEfficiencyScoring = {
     REAL_WORLD_FACTORS,
     EFFICIENCY_WEIGHTS,
     TRANSMISSION_EFFICIENCY,
-    BODY_TYPE_EFFICIENCY
+    BODY_TYPE_EFFICIENCY,
+    hasAllRequiredParams,
+    getCarEfficiencyScoreOrError
 };
 
