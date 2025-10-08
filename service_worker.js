@@ -86,9 +86,8 @@ class CarEfficiencyServiceWorker {
         chrome.storage.onChanged.addListener((changes, namespace) => {
             if (namespace === 'sync' && changes.carEfficiencySettings) {
                 console.log('Settings changed:', changes.carEfficiencySettings);
-
-                // Notify all content scripts about settings change
-                this.notifyContentScripts('settingsChanged', changes.carEfficiencySettings.newValue);
+                // Content scripts will automatically detect storage changes
+                // No need to notify them explicitly
             }
         });
     }
@@ -254,28 +253,6 @@ class CarEfficiencyServiceWorker {
         // - User preferences
     }
 
-    /**
-     * Notify all content scripts
-     */
-    async notifyContentScripts(action, data) {
-        try {
-            const tabs = await chrome.tabs.query({});
-
-            for (const tab of tabs) {
-                try {
-                    await chrome.tabs.sendMessage(tab.id, {
-                        action,
-                        data
-                    });
-                } catch (error) {
-                    // Ignore errors for tabs without content scripts
-                }
-            }
-
-        } catch (error) {
-            console.error('Error notifying content scripts:', error);
-        }
-    }
 
     /**
      * Clean up old data (called periodically)
